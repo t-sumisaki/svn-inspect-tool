@@ -12,13 +12,13 @@ import (
 	"github.com/slack-go/slack"
 )
 
-type PostLockInfoConfig struct {
+type NotifyLockInfoConfig struct {
 	Name            string
 	RepositoryPath  string
 	SlackWebhookURL string
 }
 
-type PostLockInfoConfigSet map[string]PostLockInfoConfig
+type NotifyLockInfoConfigSet map[string]NotifyLockInfoConfig
 
 type nofityLockInfoCmd struct {
 	profile string
@@ -44,7 +44,7 @@ func (c *nofityLockInfoCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...int
 		return subcommands.ExitFailure
 	}
 
-	profile, ok := config.PostLockInfo[c.profile]
+	profile, ok := config.NotifyLockInfo[c.profile]
 	if !ok {
 		logfile.Error().Str("profile", c.profile).Msg("profile not found")
 	}
@@ -85,5 +85,6 @@ func (c *nofityLockInfoCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...int
 		logfile.Err(err).Msg("Slack postwebhook failed")
 	}
 
+	logfile.Info().Str("profile", profile.Name).Msg("NotifyLockInfo command completed")
 	return subcommands.ExitSuccess
 }
