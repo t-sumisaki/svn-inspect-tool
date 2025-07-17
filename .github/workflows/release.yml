@@ -23,7 +23,7 @@ jobs:
       - name: Build
         run: |
           mkdir -p dist
-          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o dist/svn-inspect-tool ./cmd
+          GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-w -s" -o dist/svn-inspect-tool ./cmd
       - name: Archive file (zip)
         run: |
           cd dist
