@@ -22,6 +22,7 @@ type NotifyLockInfoConfigSet map[string]NotifyLockInfoConfig
 
 type nofityLockInfoCmd struct {
 	profile string
+	dryrun  bool
 }
 
 func (*nofityLockInfoCmd) Name() string     { return "notifylockinfo" }
@@ -33,6 +34,7 @@ func (*nofityLockInfoCmd) Usage() string {
 
 func (c *nofityLockInfoCmd) SetFlags(f *flag.FlagSet) {
 	f.StringVar(&c.profile, "profile", "", "config profile")
+	f.BoolVar(&c.dryrun, "dryrun", false, "run without slack api")
 }
 
 func (c *nofityLockInfoCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
@@ -47,7 +49,10 @@ func (c *nofityLockInfoCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...int
 	profile, ok := config.NotifyLockInfo[c.profile]
 	if !ok {
 		logfile.Error().Str("profile", c.profile).Msg("profile not found")
+		return subcommands.ExitFailure
 	}
+
+	logfile.Info().Str("profile", c.profile)
 
 	lockinfo, err := svnadmin.GetLockInfo(profile.RepositoryPath)
 	if err != nil {
@@ -67,6 +72,11 @@ func (c *nofityLockInfoCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...int
 			builder.WriteString(fmt.Sprintf(" - %s\n", info.Path))
 		}
 		builder.WriteString("\n")
+	}
+
+	if c.dryrun {
+		fmt.Printf("Result: \n%s\n", builder.String())
+		return subcommands.ExitSuccess
 	}
 
 	bm := &slack.WebhookMessage{
