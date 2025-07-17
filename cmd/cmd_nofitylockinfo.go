@@ -91,9 +91,13 @@ func (c *nofityLockInfoCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...int
 	}
 
 	bm := &slack.WebhookMessage{
-		Text: fmt.Sprintf("SVNロックチェック: %s", profile.Name),
+		Text: fmt.Sprintf("*SVNロック情報* (%s)", profile.Name),
 		Blocks: &slack.Blocks{
 			BlockSet: []slack.Block{
+				slack.NewSectionBlock(&slack.TextBlockObject{
+					Type: slack.MarkdownType,
+					Text: fmt.Sprintf("*SVNロック情報* (%s)", profile.Name),
+				}, nil, nil),
 				slack.NewSectionBlock(&slack.TextBlockObject{
 					Type: slack.MarkdownType,
 					Text: fmt.Sprintf("```%s```", builder.String()),
