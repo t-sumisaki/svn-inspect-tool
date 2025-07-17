@@ -57,7 +57,7 @@ func (c *nofityLockInfoCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...int
 
 	lockinfo, err := svnadmin.GetLockInfo(profile.RepositoryPath)
 	if err != nil {
-		logfile.Err(err)
+		logfile.Err(err).Msg("failed to svnadmin command")
 		return subcommands.ExitFailure
 	}
 
