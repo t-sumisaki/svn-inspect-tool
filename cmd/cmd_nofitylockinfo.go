@@ -39,6 +39,7 @@ func (c *nofityLockInfoCmd) SetFlags(f *flag.FlagSet) {
 
 func (c *nofityLockInfoCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
 
+	logfile.Info().Str("profile", c.profile).Bool("dryrun", c.dryrun).Msg("NotifyLockInfo command start")
 	var config ConfigFile
 
 	if err := loadConfig(&config); err != nil {
@@ -52,7 +53,7 @@ func (c *nofityLockInfoCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...int
 		return subcommands.ExitFailure
 	}
 
-	logfile.Info().Str("profile", c.profile)
+	logfile.Info().Str("Name", profile.Name).Str("RepositoryPath", profile.RepositoryPath).Msg("Start Query")
 
 	lockinfo, err := svnadmin.GetLockInfo(profile.RepositoryPath)
 	if err != nil {
@@ -91,6 +92,7 @@ func (c *nofityLockInfoCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...int
 		},
 	}
 
+	logfile.Info().Str("url", profile.SlackWebhookURL).Msg("Send slack webhook")
 	if err := slack.PostWebhook(profile.SlackWebhookURL, bm); err != nil {
 		logfile.Err(err).Msg("Slack postwebhook failed")
 	}
