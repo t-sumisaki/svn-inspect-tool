@@ -13,9 +13,9 @@ import (
 )
 
 type NotifyLockInfoConfig struct {
-	Name            string
-	RepositoryPath  string
-	SlackWebhookURL string
+	Name            string `yaml:"Name"`
+	RepositoryPath  string `yaml:"RepositoryPath"`
+	SlackWebhookURL string `yaml:"SlackWebhookURL"`
 }
 
 type NotifyLockInfoConfigSet map[string]NotifyLockInfoConfig
@@ -50,6 +50,16 @@ func (c *nofityLockInfoCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...int
 	profile, ok := config.NotifyLockInfo[c.profile]
 	if !ok {
 		logfile.Error().Str("profile", c.profile).Msg("profile not found")
+		return subcommands.ExitFailure
+	}
+
+	if profile.RepositoryPath == "" {
+		logfile.Error().Str("profile", c.profile).Msg("RepositoryPath is not defined")
+		return subcommands.ExitFailure
+	}
+
+	if profile.SlackWebhookURL == "" {
+		logfile.Error().Str("profile", c.profile).Msg("SlackWebhookURL is not defined")
 		return subcommands.ExitFailure
 	}
 
