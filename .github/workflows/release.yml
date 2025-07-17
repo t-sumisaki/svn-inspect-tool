@@ -1,0 +1,36 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Golang
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Build
+        run: |
+          mkdir -p dist
+          GOOS=linux GOARCH=amd64 go build -o dist/svn-inspect-tool ./cmd
+      - name: Archive file (zip)
+        run: |
+          cd dist
+          zip svn-inspect-tool_linux.zip svn-inspect-tool
+      - name: Create Github Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Release ${{ github.ref_name }}
+          files: |
+            dist/svn-inspect-tool_linux.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

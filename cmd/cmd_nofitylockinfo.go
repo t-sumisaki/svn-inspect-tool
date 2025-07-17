@@ -1,0 +1,89 @@
+package main
+
+import (
+	"context"
+	"flag"
+	"fmt"
+	"strings"
+	"t-sumisaki/svn-inspect-tool/svnadmin"
+
+	"github.com/google/subcommands"
+
+	"github.com/slack-go/slack"
+)
+
+type PostLockInfoConfig struct {
+	Name            string
+	RepositoryPath  string
+	SlackWebhookURL string
+}
+
+type PostLockInfoConfigSet map[string]PostLockInfoConfig
+
+type nofityLockInfoCmd struct {
+	profile string
+}
+
+func (*nofityLockInfoCmd) Name() string     { return "notifylockinfo" }
+func (*nofityLockInfoCmd) Synopsis() string { return "Post SVN lock status message to Slack" }
+func (*nofityLockInfoCmd) Usage() string {
+	return `notifylockinfo -profile
+	Post SVN lock status message to Slack`
+}
+
+func (c *nofityLockInfoCmd) SetFlags(f *flag.FlagSet) {
+	f.StringVar(&c.profile, "profile", "", "config profile")
+}
+
+func (c *nofityLockInfoCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
+
+	var config ConfigFile
+
+	if err := loadConfig(&config); err != nil {
+		logfile.Err(err).Msg("loadConfig Failed.")
+		return subcommands.ExitFailure
+	}
+
+	profile, ok := config.PostLockInfo[c.profile]
+	if !ok {
+		logfile.Error().Str("profile", c.profile).Msg("profile not found")
+	}
+
+	lockinfo, err := svnadmin.GetLockInfo(profile.RepositoryPath)
+	if err != nil {
+		logfile.Err(err)
+		return subcommands.ExitFailure
+	}
+
+	grouped := make(map[string][]svnadmin.SvnLockInfo)
+	for _, lock := range lockinfo {
+		grouped[lock.Owner] = append(grouped[lock.Owner], lock)
+	}
+
+	var builder strings.Builder
+	for owner, infos := range grouped {
+		builder.WriteString(fmt.Sprintf("User: %s\n", owner))
+		for _, info := range infos {
+			builder.WriteString(fmt.Sprintf(" - %s\n", info.Path))
+		}
+		builder.WriteString("\n")
+	}
+
+	bm := &slack.WebhookMessage{
+		Text: fmt.Sprintf("SVNロックチェック: %s", profile.Name),
+		Blocks: &slack.Blocks{
+			BlockSet: []slack.Block{
+				slack.NewSectionBlock(&slack.TextBlockObject{
+					Type: slack.MarkdownType,
+					Text: fmt.Sprintf("```%s```", builder.String()),
+				}, nil, nil),
+			},
+		},
+	}
+
+	if err := slack.PostWebhook(profile.SlackWebhookURL, bm); err != nil {
+		logfile.Err(err).Msg("Slack postwebhook failed")
+	}
+
+	return subcommands.ExitSuccess
+}
