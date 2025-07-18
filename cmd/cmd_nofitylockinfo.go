@@ -80,7 +80,7 @@ func (c *nofityLockInfoCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...int
 	for owner, infos := range grouped {
 		builder.WriteString(fmt.Sprintf("User: %s\n", owner))
 		for _, info := range infos {
-			builder.WriteString(fmt.Sprintf(" - %s\n", info.Path))
+			builder.WriteString(fmt.Sprintf("%s\n", info.Path))
 		}
 		builder.WriteString("\n")
 	}
