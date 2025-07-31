@@ -2,6 +2,7 @@ package diskutil
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"os/exec"
 	"strings"
@@ -90,9 +91,19 @@ func GetDUResult(path string) ([]DUEntry, error) {
 		return nil, fmt.Errorf("create pipe error: %v", err)
 	}
 
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		return nil, fmt.Errorf("create stderr pipe error: %v", err)
+	}
+
 	if err := cmd.Start(); err != nil {
 		return nil, fmt.Errorf("command execute error: %v", err)
 	}
+
+	var errBuf bytes.Buffer
+	go func() {
+		_, _ = errBuf.ReadFrom(stderr)
+	}()
 
 	scanner := bufio.NewScanner(stdout)
 
@@ -116,7 +127,7 @@ func GetDUResult(path string) ([]DUEntry, error) {
 	}
 
 	if err := cmd.Wait(); err != nil {
-		return nil, fmt.Errorf("command finish error: %v", err)
+		return nil, fmt.Errorf("command finish error: %v, stderr: %s", err, strings.TrimSpace(errBuf.String()))
 	}
 
 	return result, nil
