@@ -25,7 +25,7 @@ func (e *DFEntry) GetAvailablePercent() string {
 		return "NaN"
 	}
 
-	return fmt.Sprintf("%d%%", UsePercentNum)
+	return fmt.Sprintf("%d%%", 100-UsePercentNum)
 }
 
 func FindByMount(entries []DFEntry, mountPoint string) *DFEntry {
