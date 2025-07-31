@@ -9,6 +9,7 @@ import (
 
 type ConfigFile struct {
 	NotifyLockInfo NotifyLockInfoConfigSet `yaml:"notifylockinfo"`
+	NotifyDiskInfo NotifyDiskInfoConfig    `yaml:"notifydiskinfo"`
 }
 
 func loadConfig(config *ConfigFile) error {

@@ -26,6 +26,7 @@ func main() {
 	subcommands.Register(subcommands.FlagsCommand(), "")
 	subcommands.Register(subcommands.CommandsCommand(), "")
 	subcommands.Register(&nofityLockInfoCmd{}, "")
+	subcommands.Register(&notifyDiskInfoCmd{}, "")
 
 	flag.Parse()
 	ctx := context.Background()
