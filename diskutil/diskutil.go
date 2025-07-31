@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
@@ -16,6 +17,15 @@ type DFEntry struct {
 	Available  string
 	UsePercent string
 	MountedOn  string
+}
+
+func (e *DFEntry) GetAvailablePercent() string {
+	UsePercentNum, err := strconv.Atoi(strings.ReplaceAll(e.UsePercent, "%", ""))
+	if err != nil {
+		return "NaN"
+	}
+
+	return fmt.Sprintf("%d%%", UsePercentNum)
 }
 
 func FindByMount(entries []DFEntry, mountPoint string) *DFEntry {

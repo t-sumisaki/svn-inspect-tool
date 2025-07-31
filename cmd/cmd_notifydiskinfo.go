@@ -64,7 +64,7 @@ func (c *notifyDiskInfoCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...int
 
 	var builder strings.Builder
 	for _, entry := range duResult {
-		builder.WriteString(fmt.Sprintf("%s\t\t%s", entry.Size, entry.Path))
+		builder.WriteString(fmt.Sprintf("%s\t\t%s\n", entry.Size, entry.Path))
 	}
 
 	if c.dryrun {
@@ -82,14 +82,31 @@ func (c *notifyDiskInfoCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...int
 					Type: slack.MarkdownType,
 					Text: "*SVNディスク使用量レポート*",
 				}, nil, nil),
+				slack.NewSectionBlock(nil, []*slack.TextBlockObject{
+					{
+						Type: slack.MarkdownType,
+						Text: fmt.Sprintf("*空き容量:*\n%s (%s)",
+							targetMount.Available,
+							targetMount.GetAvailablePercent()),
+					},
+					{
+						Type: slack.MarkdownType,
+						Text: fmt.Sprintf("*使用済み:*\n%s (%s)",
+							targetMount.Used,
+							targetMount.UsePercent),
+					},
+					{
+						Type: slack.MarkdownType,
+						Text: fmt.Sprintf("*総容量:*\n%s", targetMount.Size),
+					},
+					{
+						Type: slack.MarkdownType,
+						Text: fmt.Sprintf("*マウントパス:*\n%s", targetMount.MountedOn),
+					},
+				}, nil),
 				slack.NewSectionBlock(&slack.TextBlockObject{
 					Type: slack.MarkdownType,
-					Text: fmt.Sprintf("*[%s]空き容量:* %s (%s) (%s / %s)",
-						targetMount.MountedOn,
-						targetMount.Available,
-						targetMount.UsePercent,
-						targetMount.Used,
-						targetMount.Size),
+					Text: "*リポジトリ別サイズ*",
 				}, nil, nil),
 				slack.NewSectionBlock(&slack.TextBlockObject{
 					Type: slack.MarkdownType,
