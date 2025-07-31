@@ -70,6 +70,10 @@ func GetDFResult() ([]DFEntry, error) {
 		results = append(results, entry)
 	}
 
+	if err := cmd.Wait(); err != nil {
+		return nil, fmt.Errorf("command finish error: %v", err)
+	}
+
 	return results, nil
 }
 
@@ -109,6 +113,10 @@ func GetDUResult(path string) ([]DUEntry, error) {
 		}
 
 		result = append(result, entry)
+	}
+
+	if err := cmd.Wait(); err != nil {
+		return nil, fmt.Errorf("command finish error: %v", err)
 	}
 
 	return result, nil
