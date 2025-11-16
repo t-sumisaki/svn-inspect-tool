@@ -85,6 +85,10 @@ func (c *nofityLockInfoCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...int
 		builder.WriteString("\n")
 	}
 
+	if builder.Len() == 0 {
+		builder.WriteString("No locked asset")
+	}
+
 	if c.dryrun {
 		fmt.Printf("Result: \n%s\n", builder.String())
 		return subcommands.ExitSuccess
