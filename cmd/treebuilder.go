@@ -47,8 +47,8 @@ func PrintTree(n *Node, indent string) string {
 	var walk func(_node *Node, _indent string)
 	walk = func(_node *Node, _indent string) {
 		for _, child := range _node.Children {
-			builder.WriteString(_indent + child.Name)
-			walk(child, _indent+"\t")
+			builder.WriteString(_indent + child.Name + "\n")
+			walk(child, _indent+"  ")
 		}
 	}
 
