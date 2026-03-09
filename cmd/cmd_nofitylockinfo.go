@@ -4,8 +4,8 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"strings"
 	"t-sumisaki/svn-inspect-tool/svnadmin"
+	"time"
 
 	"github.com/google/subcommands"
 
@@ -76,43 +76,75 @@ func (c *nofityLockInfoCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...int
 		grouped[lock.Owner] = append(grouped[lock.Owner], lock)
 	}
 
-	var builder strings.Builder
 	for owner, infos := range grouped {
-		builder.WriteString(fmt.Sprintf("User: %s\n", owner))
-		for _, info := range infos {
-			builder.WriteString(fmt.Sprintf("%s\n", info.Path))
+
+		paths := make([]string, len(infos))
+		for i, v := range infos {
+			paths[i] = v.Path
 		}
-		builder.WriteString("\n")
-	}
 
-	if builder.Len() == 0 {
-		builder.WriteString("No locked asset")
-	}
+		assets := BuildTree(paths)
 
-	if c.dryrun {
-		fmt.Printf("Result: \n%s\n", builder.String())
-		return subcommands.ExitSuccess
-	}
+		result := PrintTree(assets, "")
 
-	bm := &slack.WebhookMessage{
-		Text: fmt.Sprintf("*SVNロック情報* (%s)", profile.Name),
-		Blocks: &slack.Blocks{
-			BlockSet: []slack.Block{
-				slack.NewSectionBlock(&slack.TextBlockObject{
-					Type: slack.MarkdownType,
-					Text: fmt.Sprintf("*SVNロック情報* (%s)", profile.Name),
-				}, nil, nil),
-				slack.NewSectionBlock(&slack.TextBlockObject{
-					Type: slack.MarkdownType,
-					Text: fmt.Sprintf("```%s```", builder.String()),
-				}, nil, nil),
+		if c.dryrun {
+			fmt.Printf("Result: \n%s\n", result)
+			continue
+		}
+
+		bm := &slack.WebhookMessage{
+			Text: fmt.Sprintf("*SVNロック情報* (%s)", profile.Name),
+			Blocks: &slack.Blocks{
+				BlockSet: []slack.Block{
+					slack.NewSectionBlock(&slack.TextBlockObject{
+						Type: slack.MarkdownType,
+						Text: fmt.Sprintf("*SVNロック情報* (%s)", profile.Name),
+					}, nil, nil),
+					slack.NewSectionBlock(&slack.TextBlockObject{
+						Type: slack.MarkdownType,
+						Text: fmt.Sprintf("User: %s", owner),
+					}, nil, nil),
+					slack.NewSectionBlock(&slack.TextBlockObject{
+						Type: slack.MarkdownType,
+						Text: fmt.Sprintf("```%s```", result),
+					}, nil, nil),
+				},
 			},
-		},
+		}
+
+		logfile.Info().Str("url", profile.SlackWebhookURL).Str("User", owner).Msg("Send slack webhook")
+		if err := slack.PostWebhook(profile.SlackWebhookURL, bm); err != nil {
+			logfile.Err(err).Msg("Slack postwebhook failed")
+		}
+
+		logfile.Info().Msg("wait for send next message...")
+		time.Sleep(3 * time.Second)
 	}
 
-	logfile.Info().Str("url", profile.SlackWebhookURL).Msg("Send slack webhook")
-	if err := slack.PostWebhook(profile.SlackWebhookURL, bm); err != nil {
-		logfile.Err(err).Msg("Slack postwebhook failed")
+	if len(lockinfo) <= 0 {
+		if c.dryrun {
+			fmt.Printf("No locked asset.")
+		} else {
+			bm := &slack.WebhookMessage{
+				Text: fmt.Sprintf("*SVNロック情報* (%s)", profile.Name),
+				Blocks: &slack.Blocks{
+					BlockSet: []slack.Block{
+						slack.NewSectionBlock(&slack.TextBlockObject{
+							Type: slack.MarkdownType,
+							Text: fmt.Sprintf("*SVNロック情報* (%s)", profile.Name),
+						}, nil, nil),
+						slack.NewSectionBlock(&slack.TextBlockObject{
+							Type: slack.MarkdownType,
+							Text: "No locked asset.",
+						}, nil, nil),
+					},
+				},
+			}
+			logfile.Info().Str("url", profile.SlackWebhookURL).Msg("Send slack webhook")
+			if err := slack.PostWebhook(profile.SlackWebhookURL, bm); err != nil {
+				logfile.Err(err).Msg("Slack postwebhook failed")
+			}
+		}
 	}
 
 	logfile.Info().Str("profile", profile.Name).Msg("NotifyLockInfo command completed")
