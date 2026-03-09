@@ -102,7 +102,7 @@ func (c *nofityLockInfoCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...int
 					}, nil, nil),
 					slack.NewSectionBlock(&slack.TextBlockObject{
 						Type: slack.MarkdownType,
-						Text: fmt.Sprintf("User: %s", owner),
+						Text: fmt.Sprintf("User: %s (%d files)", owner, len(infos)),
 					}, nil, nil),
 					slack.NewSectionBlock(&slack.TextBlockObject{
 						Type: slack.MarkdownType,
