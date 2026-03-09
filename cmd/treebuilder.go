@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 )
 
@@ -51,6 +52,9 @@ func PrintTree(n *Node, indent string) string {
 		for k := range _node.Children {
 			keys = append(keys, k)
 		}
+
+		sort.Strings(keys)
+
 		for i, k := range keys {
 			child := _node.Children[k]
 			last := i == len(_node.Children)-1
