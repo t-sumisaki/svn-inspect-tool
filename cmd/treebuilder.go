@@ -45,8 +45,8 @@ func PrintTree(n *Node, indent string) string {
 
 	var builder strings.Builder
 
-	var walk func(_node *Node, _indent string)
-	walk = func(_node *Node, _indent string) {
+	var walk func(_node *Node, _indent string, _level int)
+	walk = func(_node *Node, _indent string, _level int) {
 
 		keys := make([]string, 0, len(_node.Children))
 		for k := range _node.Children {
@@ -58,21 +58,21 @@ func PrintTree(n *Node, indent string) string {
 		for i, k := range keys {
 			child := _node.Children[k]
 			last := i == len(_node.Children)-1
-			first := _indent == ""
+			first := _level == 0
 			if first {
 				builder.WriteString(child.Name + "\n")
-				walk(child, "    ")
+				walk(child, "", _level+1)
 			} else if last {
-				builder.WriteString(_indent + "└── " + child.Name + "\n")
-				walk(child, _indent+"    ")
+				builder.WriteString(_indent + "└─ " + child.Name + "\n")
+				walk(child, _indent+"   ", _level+1)
 			} else {
-				builder.WriteString(_indent + "├── " + child.Name + "\n")
-				walk(child, _indent+"│   ")
+				builder.WriteString(_indent + "├─ " + child.Name + "\n")
+				walk(child, _indent+"│  ", _level+1)
 			}
 		}
 	}
 
-	walk(n, indent)
+	walk(n, indent, 0)
 
 	return builder.String()
 }
