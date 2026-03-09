@@ -46,8 +46,13 @@ func PrintTree(n *Node, indent string) string {
 
 	var walk func(_node *Node, _indent string)
 	walk = func(_node *Node, _indent string) {
-		i := 0
-		for _, child := range _node.Children {
+
+		keys := make([]string, 0, len(_node.Children))
+		for k := range _node.Children {
+			keys = append(keys, k)
+		}
+		for i, k := range keys {
+			child := _node.Children[k]
 			last := i == len(_node.Children)-1
 			first := _indent == ""
 			if first {
